@@ -7,8 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Utilizando o wildcard '*' para garantir que vai puxar sempre a build compatível mais recente suportada pelo Synthesis -->
-    <PackageReference Include="Mutagen.Bethesda" Version="*" />
-    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="*" />
+    <!-- Substitua pela versão exata instalada no seu ambiente (ex: 0.36.0 ou 0.37.0).
+         O Synthesis ajusta automaticamente essa versão durante o build na interface dele,
+         mas fixar um número garante builds reproduzíveis fora do Synthesis. -->
+    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.36.0" />
   </ItemGroup>
 </Project>
