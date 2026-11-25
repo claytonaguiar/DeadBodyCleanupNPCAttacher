@@ -1,5 +1,6 @@
-﻿using Mutagen.Bethesda.Synthesis.Settings;
+using Mutagen.Bethesda.Synthesis.Settings;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -7,17 +8,17 @@ namespace StringCompareSettings
 {
     public class StringCompareSetting
     {
-        [SynthesisTooltip("String keyword name which search for")]
+        [SynthesisTooltip("Keyword or pattern to search for")]
         public string? Name { get; set; }
 
         [SynthesisSettingName("Compare type")]
-        [SynthesisTooltip("Compare type, how to compare")]
+        [SynthesisTooltip("How the keyword should be matched")]
         public CompareType Compare { get; set; } = CompareType.Contains;
 
-        [SynthesisTooltip("Case insensitive compare, comparing ignore case")]
+        [SynthesisTooltip("Ignore uppercase/lowercase differences when matching")]
         public bool IgnoreCase { get; set; } = true;
 
-        [SynthesisTooltip("Commentary for the strings. Just to understand")]
+        [SynthesisTooltip("Optional note to help you remember why this entry was added")]
         public string? Comment { get; set; }
     }
 
@@ -41,10 +42,12 @@ namespace StringCompareSettings
     {
         public static bool IsUsingSkipList { get; set; } = false;
 
+        // Cache para compilar cada padrão Regex apenas uma vez durante a execução do patcher
+        private static readonly ConcurrentDictionary<(string Pattern, bool IgnoreCase), Regex?> _regexCache = new();
+
         public static bool IsInSkipList(this string? inputString, HashSet<StringCompareSettingContainer> list)
         {
-            // Corrigido: Aborta se NÃO estiver usando skip list
-            if (!IsUsingSkipList) return false; 
+            if (!IsUsingSkipList) return false;
             if (string.IsNullOrWhiteSpace(inputString)) return false;
 
             foreach (var setting in list)
@@ -67,21 +70,26 @@ namespace StringCompareSettings
                 if (isMatch) return true;
             }
 
-            // Corrigido: Retorna falso se percorreu toda a lista de exceções e o NPC não se encaixou em nenhuma
-            return false; 
+            return false;
         }
 
         private static bool SafeRegexMatch(string inputString, string pattern, bool ignoreCase)
         {
-            try
+            var regex = _regexCache.GetOrAdd((pattern, ignoreCase), key =>
             {
-                var options = ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
-                return Regex.IsMatch(inputString, pattern, options);
-            }
-            catch
-            {
-                return false;
-            }
+                try
+                {
+                    var options = RegexOptions.Compiled | (key.IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+                    return new Regex(key.Pattern, options);
+                }
+                catch
+                {
+                    // Armazena null no cache para evitar tentar recompilar um padrão inválido nos próximos NPCs
+                    return null;
+                }
+            });
+
+            return regex?.IsMatch(inputString) ?? false;
         }
     }
 }
