@@ -6,10 +6,10 @@ namespace DeadBodyCleanupNPCAttacher
 {
     public class Settings
     {
-        [SynthesisTooltip("Name of Unofficial patch where from get the script")]
+        [SynthesisTooltip("Name of the unofficial patch from which to get the script")]
         public string UnofficialPatchName { get; set; } = "Unofficial Skyrim Special Edition Patch.esp";
 
-        [SynthesisTooltip("Only forward deadbodycleanup script from Unofficial patch if it was rewrited somewhere and skip script add to npc")]
+        [SynthesisTooltip("Only forward the deadbodycleanup script from the unofficial patch if it was overwritten elsewhere, and skip adding the script to other NPCs")]
         public bool OnlyScriptForward { get; set; } = false;
 
         [SynthesisTooltip("List of string keywords to skip npc by their editor id")]
