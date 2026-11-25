@@ -31,8 +31,13 @@ namespace DeadBodyCleanupNPCAttacher
             string unofficialPatchName = Settings.UnofficialPatchName;
             
             // O método FromNameAndExtension foi removido da API. 
-            ModKey unofficialPatchModKey = ModKey.FromFileName(unofficialPatchName);
-
+            //ModKey unofficialPatchModKey = ModKey.FromFileName(unofficialPatchName);
+            if (string.IsNullOrWhiteSpace(unofficialPatchName) || !ModKey.TryFromFileName(unofficialPatchName, out ModKey unofficialPatchModKey))
+            {
+                Console.WriteLine($"Invalid or empty UnofficialPatchName: '{unofficialPatchName}'. Finish.");
+                return;
+            }
+            
             if (!state.LoadOrder.ContainsKey(unofficialPatchModKey))
             {
                 Console.WriteLine($"{unofficialPatchName} not found. Finish.");
@@ -113,6 +118,9 @@ namespace DeadBodyCleanupNPCAttacher
                     playerFound = true;
                     continue;
                 }
+                // [ADICIONADO] Evita duplicar o WIDeadBodyCleanupScript em NPCs que já receberam o script via forward na primeira etapa,
+                // pois state.LoadOrder não reflete alterações recém-feitas em state.PatchMod.
+                if (state.PatchMod.Npcs.ContainsKey(npcGetter.FormKey)) continue;
                 
                 if (!npcGetter.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Unique)) continue; 
                 if (npcGetter.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsCharGenFacePreset)) continue; 
